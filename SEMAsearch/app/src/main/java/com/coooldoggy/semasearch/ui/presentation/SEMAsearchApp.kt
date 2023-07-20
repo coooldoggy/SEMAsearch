@@ -1,6 +1,7 @@
 package com.coooldoggy.semasearch.ui.presentation
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,39 +50,54 @@ fun SEMASearchApp() {
         modifier = Modifier
             .fillMaxSize(),
         bottomBar = {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomStart) {
-                //FIXME keep coming back
+            Box(modifier = Modifier.fillMaxWidth().background(Color.White), contentAlignment = Alignment.BottomStart) {
                 if (showBottomBar) {
-                    BottomNavigationGraph(onClickSearchButton = {
-                        mainNavController.navigate(ScreenRoute.SearchScreen.name)
+                    BottomNavigationGraph(onClickSearch = {
+                        navigateToSearchScreen(mainNavController = mainNavController)
                     })
                 }
             }
         },
     ) { _innerPadding ->
         Box(modifier = Modifier.padding(_innerPadding)) {
-            NavHost(navController = mainNavController, startDestination = ScreenRoute.SplashScreen.name) {
-                composable(route = ScreenRoute.SplashScreen.name) {
-                    SplashScreen(onDoneSplash = {
-                        mainNavController.navigate(route = ScreenRoute.HomeScreen.name)
-                    })
-                }
-                composable(route = ScreenRoute.SearchScreen.name) {
-                    SearchScreen(onBackClickListener = { mainNavController.navigateUp() })
-                }
-                composable(route = ScreenRoute.HomeScreen.name) {}
-            }
+            SetUpNavHost(mainNavController = mainNavController)
         }
     }
 }
 
+private fun navigateToSearchScreen(mainNavController: NavHostController) {
+    mainNavController.navigate(route = ScreenRoute.SearchScreen.name)
+}
+
+private fun navigateToHomeScreen(mainNavController: NavHostController) {
+    mainNavController.navigate(route = ScreenRoute.HomeScreen.name) {
+        popUpTo(ScreenRoute.SplashScreen.name) { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
 @Composable
-fun BottomNavigationGraph(onClickSearchButton: () -> Unit) {
+fun SetUpNavHost(mainNavController: NavHostController) {
+    NavHost(navController = mainNavController, startDestination = ScreenRoute.SplashScreen.name) {
+        composable(route = ScreenRoute.SplashScreen.name) {
+            SplashScreen(onDoneSplash = {
+                navigateToHomeScreen(mainNavController = mainNavController)
+            })
+        }
+        composable(route = ScreenRoute.SearchScreen.name) {
+            SearchScreen(mainNavHostController = mainNavController)
+        }
+        composable(route = ScreenRoute.HomeScreen.name) {}
+    }
+}
+
+@Composable
+fun BottomNavigationGraph(onClickSearch: () -> Unit) {
     val bottomNavController = rememberNavController()
     NavHost(navController = bottomNavController, startDestination = BottomNavItem.Home.screenRoute) {
         composable(BottomNavItem.Home.screenRoute) {
             HomeScreen(onClickSearchButton = {
-                onClickSearchButton.invoke()
+                onClickSearch.invoke()
             })
         }
         composable(BottomNavItem.Favorite.screenRoute) {
