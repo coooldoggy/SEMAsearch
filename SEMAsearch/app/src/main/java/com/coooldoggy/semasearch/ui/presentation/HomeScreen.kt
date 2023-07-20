@@ -13,6 +13,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,10 +25,10 @@ import com.coooldoggy.semasearch.ui.common.AppBarWithText
 
 @SuppressLint("ResourceType")
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onClickSearchButton: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         AppBarWithText(textId = R.string.app_name)
-        SearchButton(onClickSearchButton = {}, modifier = Modifier.align(Alignment.Center))
+        SearchButton(onClickSearchButton = { onClickSearchButton.invoke() }, modifier = Modifier.align(Alignment.Center))
     }
 }
 
@@ -35,7 +36,7 @@ fun HomeScreen() {
 @Composable
 fun SearchButton(onClickSearchButton: () -> Unit, modifier: Modifier) {
     Card(
-        onClick = {},
+        onClick = { onClickSearchButton.invoke() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
         modifier = modifier.size(height = 60.dp, width = 200.dp),

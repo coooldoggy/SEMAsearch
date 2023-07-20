@@ -40,13 +40,13 @@ fun AppBar(
             .onClick {
                 clickListener.invoke()
             },
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         centerContent?.let {
             Row(
                 modifier = Modifier
                     .align(Alignment.Center),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 centerContent()
             }
@@ -57,7 +57,7 @@ fun AppBar(
                 modifier = Modifier
                     .padding(start = 16.dp)
                     .align(Alignment.CenterStart),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 leftContent()
             }
@@ -67,7 +67,7 @@ fun AppBar(
             Row(
                 modifier = Modifier
                     .align(Alignment.CenterEnd),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 rightContent()
             }
@@ -78,7 +78,7 @@ fun AppBar(
 @Composable
 fun AppBarDefaultIcon(
     iconResId: Int,
-    iconClickListener: (() -> Unit)? = null
+    iconClickListener: (() -> Unit)? = null,
 ) {
     Image(
         modifier = Modifier
@@ -95,13 +95,13 @@ fun AppBarDefaultIcon(
 @Composable
 fun AppBarBackIcon(
     iconResId: Int = R.drawable.baseline_arrow_back_24,
-    action: () -> Unit
+    action: () -> Unit,
 ) {
     AppBarDefaultIcon(
         iconResId = iconResId,
         iconClickListener = {
             action.invoke()
-        }
+        },
     )
 }
 

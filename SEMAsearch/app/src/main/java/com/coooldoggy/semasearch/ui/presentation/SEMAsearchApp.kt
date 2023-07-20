@@ -3,6 +3,7 @@ package com.coooldoggy.semasearch.ui.presentation
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -14,11 +15,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -26,36 +30,65 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.coooldoggy.semasearch.ui.common.AppBar
 import com.coooldoggy.semasearch.ui.common.BottomNavItem
+import com.coooldoggy.semasearch.ui.common.ScreenRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SEMASearchApp() {
-    val navController = rememberNavController()
+    val mainNavController = rememberNavController()
+    var showBottomBar by rememberSaveable { mutableStateOf(true) }
+    val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
+
+    showBottomBar = when (navBackStackEntry?.destination?.route) {
+        ScreenRoute.SearchScreen.name, ScreenRoute.SplashScreen.name -> false
+        else -> true
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize(),
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomStart) {
+                //FIXME keep coming back
+                if (showBottomBar) {
+                    BottomNavigationGraph(onClickSearchButton = {
+                        mainNavController.navigate(ScreenRoute.SearchScreen.name)
+                    })
+                }
+            }
         },
     ) { _innerPadding ->
         Box(modifier = Modifier.padding(_innerPadding)) {
-            BottomNavigationGraph(navController = navController)
+            NavHost(navController = mainNavController, startDestination = ScreenRoute.SplashScreen.name) {
+                composable(route = ScreenRoute.SplashScreen.name) {
+                    SplashScreen(onDoneSplash = {
+                        mainNavController.navigate(route = ScreenRoute.HomeScreen.name)
+                    })
+                }
+                composable(route = ScreenRoute.SearchScreen.name) {
+                    SearchScreen(onBackClickListener = { mainNavController.navigateUp() })
+                }
+                composable(route = ScreenRoute.HomeScreen.name) {}
+            }
         }
     }
 }
 
 @Composable
-fun BottomNavigationGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = BottomNavItem.Home.screenRoute) {
+fun BottomNavigationGraph(onClickSearchButton: () -> Unit) {
+    val bottomNavController = rememberNavController()
+    NavHost(navController = bottomNavController, startDestination = BottomNavItem.Home.screenRoute) {
         composable(BottomNavItem.Home.screenRoute) {
-            HomeScreen()
+            HomeScreen(onClickSearchButton = {
+                onClickSearchButton.invoke()
+            })
         }
         composable(BottomNavItem.Favorite.screenRoute) {
             FavoriteScreen()
         }
     }
+    BottomNavigationBar(navController = bottomNavController)
 }
 
 @SuppressLint("ResourceType")

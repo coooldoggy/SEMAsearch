@@ -5,7 +5,6 @@ import androidx.annotation.IdRes
 import com.coooldoggy.semasearch.FAVORITE_VIEW
 import com.coooldoggy.semasearch.HOME_VIEW
 import com.coooldoggy.semasearch.R
-import com.coooldoggy.semasearch.SEARCH_VIEW
 
 sealed class BottomNavItem(
     @IdRes val title: Int,
@@ -17,4 +16,24 @@ sealed class BottomNavItem(
 
     @SuppressLint("ResourceType")
     object Favorite : BottomNavItem(title = R.string.favorite_screen, icon = R.drawable.baseline_star_border_24, screenRoute = FAVORITE_VIEW)
+}
+
+enum class ScreenRoute {
+    SplashScreen,
+    HomeScreen,
+    SearchScreen,
+    FavoriteScreen
+    ;
+
+    companion object {
+        fun fromRoute(route: String?): String =
+            when (route?.substringBefore("/")) {
+                SplashScreen.name -> SplashScreen.name
+                HomeScreen.name -> HomeScreen.name
+                SearchScreen.name -> SearchScreen.name
+                BottomNavItem.Home.screenRoute -> HomeScreen.name
+                null -> SearchScreen.name
+                else -> throw IllegalArgumentException("Route $route is not recognized.")
+            }
+    }
 }

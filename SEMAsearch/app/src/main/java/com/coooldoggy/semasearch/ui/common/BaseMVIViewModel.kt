@@ -20,7 +20,7 @@ abstract class BaseMVIViewModel : ViewModel() {
     private val _event: MutableSharedFlow<BaseUiEvent> = MutableSharedFlow()
 
     private val _effect: Channel<BaseUiEffect> = Channel()
-    private val effect: Flow<BaseUiEffect> = _effect.receiveAsFlow()
+    val effect: Flow<BaseUiEffect> = _effect.receiveAsFlow()
 
     private val _commonEvent: MutableSharedFlow<BaseUiContract.BaseUiLoadingEvent> =
         MutableSharedFlow()

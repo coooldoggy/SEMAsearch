@@ -124,6 +124,7 @@ fun BasicTextField(
                                     )
                                 },
                                 contentPadding = contentPadding,
+                                colors = TextFieldDefaults.textFieldColors(containerColor = Color.White)
                             )
                         },
                     )
