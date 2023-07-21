@@ -1,7 +1,7 @@
 package com.coooldoggy.semasearch.repository
 
 import com.coooldoggy.semasearch.data.network.SEMAServiceImpl
-import com.coooldoggy.semasearch.domain.CollectionInfo
+import com.coooldoggy.semasearch.domain.CollectionResult
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
@@ -14,7 +14,7 @@ class NetworkRepository @Inject constructor(
     suspend fun queryCollection(
         startIdx: Int,
         productName: String,
-    ): Flow<Response<CollectionInfo>> = semaServiceImpl.queryCollection(
+    ): Flow<Response<CollectionResult>> = semaServiceImpl.queryCollection(
         startIdx = startIdx,
         productName = productName,
     )

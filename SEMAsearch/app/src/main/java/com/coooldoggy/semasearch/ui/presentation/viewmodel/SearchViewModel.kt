@@ -1,5 +1,7 @@
 package com.coooldoggy.semasearch.ui.presentation.viewmodel
 
+import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.coooldoggy.semasearch.repository.NetworkRepository
 import com.coooldoggy.semasearch.ui.common.BaseMVIViewModel
 import com.coooldoggy.semasearch.ui.common.BaseUiEvent
@@ -7,7 +9,9 @@ import com.coooldoggy.semasearch.ui.presentation.contract.SearchScreenContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,6 +33,7 @@ class SearchViewModel @Inject constructor(
                         searchQuery = event.query,
                     )
                 }
+                queryCollection()
             }
             is SearchScreenContract.Event.OnDeleteClick -> {
                 _state.update {
@@ -41,5 +46,18 @@ class SearchViewModel @Inject constructor(
     }
 
     override fun loadData() {
+//        if (state.value.searchQuery.isNotEmpty()) {
+//            queryCollection()
+//        }
+    }
+
+    private fun queryCollection(){
+        viewModelScope.launch {
+            networkRepository.queryCollection(startIdx = 0, productName = state.value.searchQuery).collectLatest { result ->
+                if (result.isSuccessful){
+                    Log.d("!!!!!!!!!", "${result.body()}")
+                }
+            }
+        }
     }
 }

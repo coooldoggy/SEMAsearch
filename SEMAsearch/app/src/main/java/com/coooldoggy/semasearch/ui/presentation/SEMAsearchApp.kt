@@ -120,6 +120,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 
         navItems.forEach { _item ->
             NavigationBarItem(
+                alwaysShowLabel = true,
                 selected = currentRoute == _item.screenRoute,
                 onClick = {
                     navController.navigate(_item.screenRoute) {
@@ -147,7 +148,6 @@ fun BottomNavigationBar(navController: NavHostController) {
                     unselectedTextColor = Color.LightGray,
                     indicatorColor = Color.LightGray,
                 ),
-                alwaysShowLabel = false,
             )
         }
     }

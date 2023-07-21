@@ -2,6 +2,11 @@ package com.coooldoggy.semasearch.domain
 
 import com.google.gson.annotations.SerializedName
 
+
+data class CollectionResult(
+    @SerializedName("SemaPsgudInfoKorInfo")
+    val SemaPsgudInfoKorInfo : CollectionInfo
+)
 data class CollectionInfo(
     @SerializedName("list_total_count")
     val totalCount: Int,

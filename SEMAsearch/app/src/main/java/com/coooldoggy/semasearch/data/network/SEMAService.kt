@@ -1,6 +1,7 @@
 package com.coooldoggy.semasearch.data.network
 
 import com.coooldoggy.semasearch.domain.CollectionInfo
+import com.coooldoggy.semasearch.domain.CollectionResult
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -12,8 +13,8 @@ interface SEMAService {
         @Path("key")key: String,
         @Path("startIdx")startIdx: Int,
         @Path("endIdx")endIdx: Int,
-        @Path("productName")productName: String
-    ): Response<CollectionInfo>
+        @Path("prdct_cl_nm")productName: String
+    ): Response<CollectionResult>
 
     @GET("{key}/json/SemaPsgudInfoKorInfo/{startIdx}/{endIdx}/{prdct_cl_nm}/{manage_no_year}/{prodct_nm_korean}/{prodct_nm_eng}")
     suspend fun queryCollectionWithFilter(
