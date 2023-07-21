@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+//TODO MVVVM으로 변환하기
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val networkRepository: NetworkRepository,
