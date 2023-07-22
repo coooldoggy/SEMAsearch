@@ -1,4 +1,4 @@
-package com.coooldoggy.semasearch.data.network
+package com.coooldoggy.semasearch.base
 
 enum class SemaResultCode(val code: String, val message: String) {
     INFO_000(code = "INFO-000", message = "정상 처리되었습니다"),
@@ -15,5 +15,11 @@ enum class SemaResultCode(val code: String, val message: String) {
     ERROR_500(code = "ERROR-500", message = "서버 오류입니다."),
     ERROR_600(code = "ERROR-600", message = "데이터베이스 연결 오류입니다."),
     ERROR_601(code = "ERROR-601", message = "SQL 문장 오류 입니다."),
-    INFO_200(code = "INFO-200", message = "해당하는 데이터가 없습니다.")
+    INFO_200(code = "INFO-200", message = "해당하는 데이터가 없습니다."),
+    NONE(code = "", message = ""),
+    ;
+
+    companion object {
+        fun from(search: String): SemaResultCode = values().find { it.code == search } ?: NONE
+    }
 }

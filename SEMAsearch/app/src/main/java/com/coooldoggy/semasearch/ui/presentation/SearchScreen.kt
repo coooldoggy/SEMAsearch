@@ -8,11 +8,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,11 +27,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -34,6 +43,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -43,7 +53,7 @@ import com.coooldoggy.semasearch.domain.Collection
 import com.coooldoggy.semasearch.ui.common.AppBar
 import com.coooldoggy.semasearch.ui.common.AppBarBackIcon
 import com.coooldoggy.semasearch.ui.common.BasicTextField
-import com.coooldoggy.semasearch.ui.presentation.contract.SearchScreenContract
+import com.coooldoggy.semasearch.ui.common.ResultBox
 import com.coooldoggy.semasearch.ui.presentation.viewmodel.SearchViewModel
 import com.coooldoggy.semasearch.util.composableActivityViewModel
 import com.coooldoggy.semasearch.util.onClick
@@ -53,7 +63,8 @@ import kotlinx.coroutines.launch
 fun SearchScreen(mainNavHostController: NavHostController) {
     val searchViewModel = composableActivityViewModel<SearchViewModel>()
     val state = searchViewModel.state.collectAsState()
-    val commonState = searchViewModel.commonState.collectAsState()
+    val loadingState = searchViewModel.loadingState.observeAsState().value ?: false
+    val errorState = searchViewModel.errorState.observeAsState().value
 
     Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
         Box(modifier = Modifier.align(Alignment.TopStart)) {
@@ -62,23 +73,76 @@ fun SearchScreen(mainNavHostController: NavHostController) {
                     mainNavHostController.navigateUp()
                 })
                 SearchBar(onDoneClickListener = { _query ->
-                    searchViewModel.sendEvent(SearchScreenContract.Event.OnClickSearch(_query))
+                    updateQuery(query = _query, searchViewModel = searchViewModel)
+                    onClickSearch(searchViewModel = searchViewModel)
                 }, onDeleteClickListener = {
-                    searchViewModel.sendEvent(SearchScreenContract.Event.OnDeleteClick)
+                    updateQuery(query = "", searchViewModel = searchViewModel)
                 }, query = state.value.searchQuery)
+                ResultBox(loadingState = loadingState, errorState = errorState) {
+                    SearchResult(data = state.value.searchResult, loadMore = { searchViewModel.loadMore() })
+                }
             }
         }
-        // TODO ProgressBar & message
-        CollectionSearchButton(
-            onClickSearchButton = {},
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
+        if (state.value.searchResult.isEmpty()) {
+            CollectionSearchButton(
+                onClickSearchButton = { onClickSearch(searchViewModel = searchViewModel) },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
 }
 
 @Composable
-fun SearchResult(){
+fun LazyGridState.OnBottomReached(
+    loadMore: () -> Unit,
+) {
+    val shouldLoadMore = remember {
+        derivedStateOf {
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
+                ?: return@derivedStateOf true
 
+            lastVisibleItem.index == layoutInfo.totalItemsCount - 1
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore) {
+        snapshotFlow { shouldLoadMore.value }
+            .collect {
+                if (it) loadMore()
+            }
+    }
+}
+
+private fun onClickSearch(searchViewModel: SearchViewModel) {
+    searchViewModel.searchCollection()
+}
+
+private fun updateQuery(query: String, searchViewModel: SearchViewModel) {
+    searchViewModel.updateQuery(query)
+}
+
+@Composable
+fun SearchResult(data: List<Collection>, loadMore: () -> Unit) {
+    val gridState = rememberLazyGridState()
+
+    if (data.isNotEmpty()) {
+        gridState.OnBottomReached {
+            loadMore.invoke()
+        }
+    }
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        state = gridState,
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(10.dp),
+    ) {
+        data.onEach { _collection ->
+            item {
+                Collection(data = _collection)
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,7 +155,7 @@ fun CollectionSearchButton(onClickSearchButton: () -> Unit, modifier: Modifier) 
         modifier = modifier.height(40.dp).padding(horizontal = 15.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(top = 5.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -178,10 +242,20 @@ fun SearchBar(
 
 @Composable
 fun Collection(data: Collection) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        AsyncImage(model = data.thumbImage, contentDescription = "")
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        AsyncImage(
+            model = data.thumbImage,
+            contentDescription = "",
+            modifier = Modifier.size(80.dp).padding(10.dp),
+        )
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = data.prdctNmKorean, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(
+                text = data.prdctNmKorean,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             Text(text = "${data.writrNm}(${data.mnfctYear})", fontSize = 13.sp)
             Text(text = data.prdctClNm, fontSize = 13.sp)
         }

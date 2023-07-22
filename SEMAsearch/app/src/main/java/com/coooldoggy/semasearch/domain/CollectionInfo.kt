@@ -1,28 +1,33 @@
 package com.coooldoggy.semasearch.domain
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
 
-
+@Serializable
 data class CollectionResult(
-    @SerializedName("SemaPsgudInfoKorInfo")
-    val SemaPsgudInfoKorInfo : CollectionInfo
-)
+    @SerializedName(value = "SemaPsgudInfoKorInfo")
+    val SemaPsgudInfoKorInfo: CollectionInfo,
+) : java.io.Serializable
+
+@Serializable
+data class Result(
+    @SerializedName("CODE")
+    val code: String,
+    @SerializedName("MESSAGE")
+    val msg: String,
+) : java.io.Serializable
+
+@Serializable
 data class CollectionInfo(
     @SerializedName("list_total_count")
     val totalCount: Int,
     @SerializedName("RESULT")
     val result: Result,
     @SerializedName("row")
-    val collectionList: List<Collection>
-)
+    val collectionList: List<Collection>,
+) : java.io.Serializable
 
-data class Result(
-    @SerializedName("CODE")
-    val code: String,
-    @SerializedName("MESSAGE")
-    val msg: String
-)
-
+@Serializable
 data class Collection(
     @SerializedName("prdct_cl_nm")
     val prdctClNm: String,
@@ -45,5 +50,5 @@ data class Collection(
     @SerializedName("main_image")
     val mainImage: String,
     @SerializedName("thumb_image")
-    val thumbImage: String
-)
+    val thumbImage: String,
+) : java.io.Serializable

@@ -1,11 +1,12 @@
 package com.coooldoggy.semasearch.ui.common
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -13,13 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,7 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coooldoggy.imagesearchcompose.ui.common.ErrorData
 import com.coooldoggy.imagesearchcompose.ui.common.NoItemData
+import com.coooldoggy.semasearch.base.ResultData
 
+@SuppressLint("ResourceType")
 @Composable
 fun NoItem(
     data: NoItemData,
@@ -100,6 +99,7 @@ fun NoItem(
     }
 }
 
+@SuppressLint("ResourceType")
 @Composable
 fun ErrorItem(
     errorItemData: ErrorData,
@@ -162,6 +162,28 @@ fun ErrorItem(
 }
 
 @Composable
+fun ResultBox(modifier: Modifier = Modifier, loadingState: Boolean, errorState: ResultData.Error? = null, content: (@Composable () -> Unit)? = null) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+        if (loadingState) {
+            ProgressBarItem()
+            if (content != null) {
+                content()
+            }
+        } else if (errorState != null) {
+            ErrorItem(
+                errorItemData = ErrorData(
+                    title = errorState.getMessage(),
+                ),
+            )
+        } else {
+            if (content != null) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
 fun ProgressBarItem() {
     Column(
         modifier = Modifier
@@ -182,15 +204,6 @@ fun ProgressBarItem() {
     }
 }
 
-@Composable
-fun ProgressBarEffect(
-    viewModel: BaseMVIViewModel
-) {
-    SideEffect {
-        viewModel.loadMore()
-    }
-    ProgressBarItem()
-}
 
 @Composable
 fun AddNoItem(noItemData: NoItemData) {
@@ -206,41 +219,4 @@ fun AddErrorItem(
     ErrorItem(
         errorItemData = errorData,
     )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun SystemItem(
-    modifier: Modifier,
-    noItemData: NoItemData,
-    listState: LazyStaggeredGridState,
-    uiLoadingState: BaseUiContract.BaseUiLoadingState,
-    viewModel: BaseMVIViewModel,
-) {
-    val totalItemsCount = remember {
-        derivedStateOf { listState.layoutInfo.totalItemsCount }
-    }
-
-    when (uiLoadingState.uiState) {
-        BaseUiContract.UiState.PROGRESS -> {
-            ProgressBarEffect(
-                viewModel = viewModel,
-            )
-        }
-        BaseUiContract.UiState.ERROR -> {
-            AddErrorItem(
-                errorData = uiLoadingState.apiError,
-            )
-        }
-        BaseUiContract.UiState.COMPLETE -> {
-            if (viewModel.isEmpty(totalItemsCount.value - 1)) {
-                AddNoItem(
-                    noItemData = noItemData,
-                )
-            }
-        }
-
-        else -> {
-        }
-    }
 }
