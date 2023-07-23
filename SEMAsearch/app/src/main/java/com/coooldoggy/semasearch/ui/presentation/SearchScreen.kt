@@ -60,7 +60,6 @@ import com.coooldoggy.semasearch.ui.common.ErrorItem
 import com.coooldoggy.semasearch.ui.common.ProgressBarItem
 import com.coooldoggy.semasearch.ui.presentation.viewmodel.SearchViewModel
 import com.coooldoggy.semasearch.util.onClick
-import com.coooldoggy.semasearch.util.recomposeHighlighter
 import kotlinx.coroutines.launch
 
 @Composable
@@ -179,8 +178,7 @@ fun SearchResult(
         columns = GridCells.Fixed(2),
         state = gridState,
         modifier = Modifier
-            .fillMaxWidth()
-            .recomposeHighlighter(),
+            .fillMaxWidth(),
         contentPadding = PaddingValues(10.dp),
     ) {
         if (errorState != null) {

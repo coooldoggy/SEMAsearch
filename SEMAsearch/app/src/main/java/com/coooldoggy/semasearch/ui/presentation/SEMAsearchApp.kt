@@ -39,6 +39,7 @@ import com.coooldoggy.semasearch.ui.presentation.viewmodel.FavoriteViewModel
 @Composable
 fun SEMASearchApp(favoriteViewModel: FavoriteViewModel) {
     val mainNavController = rememberNavController()
+    val bottomNavController = rememberNavController()
     var showBottomBar by rememberSaveable { mutableStateOf(true) }
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
 
@@ -60,7 +61,7 @@ fun SEMASearchApp(favoriteViewModel: FavoriteViewModel) {
                 if (showBottomBar) {
                     BottomNavigationGraph(mainNavController = mainNavController, onClickSearch = {
                         navigateToSearchScreen(mainNavController = mainNavController)
-                    }, favoriteViewModel = favoriteViewModel)
+                    }, favoriteViewModel = favoriteViewModel, bottomNavController = bottomNavController)
                 }
             }
         },
@@ -119,8 +120,8 @@ fun BottomNavigationGraph(
     onClickSearch: () -> Unit,
     mainNavController: NavHostController,
     favoriteViewModel: FavoriteViewModel,
+    bottomNavController: NavHostController,
 ) {
-    val bottomNavController = rememberNavController()
     NavHost(
         navController = bottomNavController,
         startDestination = BottomNavItem.Home.screenRoute,
