@@ -47,6 +47,7 @@ class SearchViewModel @Inject constructor(
                 searchResult = listOf(),
             )
         }
+        clearErrorState()
     }
 
     fun searchCollection() {
@@ -67,12 +68,13 @@ class SearchViewModel @Inject constructor(
                                     searchResult = result.data?.SemaPsgudInfoKorInfo?.collectionList ?: emptyList(),
                                 )
                             }
+                            startIndex.getAndAdd(result.data?.SemaPsgudInfoKorInfo?.collectionList?.size ?: 0)
                         } else {
                             val original = state.value.searchResult
                             val searchResult = result.data?.SemaPsgudInfoKorInfo?.collectionList ?: emptyList()
                             state.value.searchResult = original + searchResult
+                            startIndex.getAndAdd(result.data?.SemaPsgudInfoKorInfo?.collectionList?.size?.minus(1) ?: 0)
                         }
-                        startIndex.getAndAdd(result.data?.SemaPsgudInfoKorInfo?.collectionList?.size?.minus(1) ?: 0)
                         enableMoreToLoad(
                             (totalPageCount.value ?: 0) > state.value.searchResult.size,
                         )

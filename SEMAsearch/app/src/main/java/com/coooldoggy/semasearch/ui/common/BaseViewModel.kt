@@ -36,6 +36,7 @@ abstract class BaseViewModel : ViewModel() {
 
     open fun loadMore() {
         if (loadingState.value != true) {
+            clearErrorState()
             loadData()
         }
     }
@@ -44,6 +45,10 @@ abstract class BaseViewModel : ViewModel() {
 
     fun setErrorState(data: ResultData.Error) {
         _errorState.value = data
+    }
+
+    fun clearErrorState() {
+        _errorState.value = null
     }
 
     fun <T> Flow<T>.loading(): Flow<T> {

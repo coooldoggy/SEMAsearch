@@ -22,7 +22,8 @@ enum class ScreenRoute {
     SplashScreen,
     HomeScreen,
     SearchScreen,
-    FavoriteScreen
+    FavoriteScreen,
+    DetailScreen
     ;
 
     companion object {
@@ -31,6 +32,7 @@ enum class ScreenRoute {
                 SplashScreen.name -> SplashScreen.name
                 HomeScreen.name -> HomeScreen.name
                 SearchScreen.name -> SearchScreen.name
+                DetailScreen.name -> DetailScreen.name
                 BottomNavItem.Home.screenRoute -> HomeScreen.name
                 null -> SearchScreen.name
                 else -> throw IllegalArgumentException("Route $route is not recognized.")

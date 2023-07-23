@@ -46,27 +46,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.coooldoggy.imagesearchcompose.ui.common.ErrorData
 import com.coooldoggy.semasearch.R
+import com.coooldoggy.semasearch.base.ResultData
 import com.coooldoggy.semasearch.domain.Collection
 import com.coooldoggy.semasearch.ui.common.AppBar
 import com.coooldoggy.semasearch.ui.common.AppBarBackIcon
 import com.coooldoggy.semasearch.ui.common.BasicTextField
-import com.coooldoggy.semasearch.ui.common.ResultBox
+import com.coooldoggy.semasearch.ui.common.ErrorItem
+import com.coooldoggy.semasearch.ui.common.ProgressBarItem
 import com.coooldoggy.semasearch.ui.presentation.viewmodel.SearchViewModel
-import com.coooldoggy.semasearch.util.composableActivityViewModel
 import com.coooldoggy.semasearch.util.onClick
+import com.coooldoggy.semasearch.util.recomposeHighlighter
 import kotlinx.coroutines.launch
 
 @Composable
-fun SearchScreen(mainNavHostController: NavHostController) {
-    val searchViewModel = composableActivityViewModel<SearchViewModel>()
+fun SearchScreen(
+    mainNavHostController: NavHostController,
+    navigateToDetailScreenListener: () -> Unit,
+    searchViewModel: SearchViewModel = hiltViewModel(),
+) {
     val state = searchViewModel.state.collectAsState()
     val loadingState = searchViewModel.loadingState.observeAsState().value ?: false
     val errorState = searchViewModel.errorState.observeAsState().value
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
+    ) {
         Box(modifier = Modifier.align(Alignment.TopStart)) {
             Column {
                 SearchBarAppBar(onBackClickListener = {
@@ -77,10 +88,22 @@ fun SearchScreen(mainNavHostController: NavHostController) {
                     onClickSearch(searchViewModel = searchViewModel)
                 }, onDeleteClickListener = {
                     updateQuery(query = "", searchViewModel = searchViewModel)
-                }, query = state.value.searchQuery)
-                ResultBox(loadingState = loadingState, errorState = errorState) {
-                    SearchResult(data = state.value.searchResult, loadMore = { searchViewModel.loadMore() })
-                }
+                }, query = state.value.searchQuery, onNewInput = { _query ->
+                    updateQuery(query = _query, searchViewModel = searchViewModel)
+                })
+                SearchResult(
+                    data = state.value.searchResult,
+                    loadMore = { loadMore(searchViewModel = searchViewModel) },
+                    loadingState = loadingState,
+                    errorState = errorState,
+                    onClickCollection = { _collection ->
+                        goToDetail(
+                            navHostController = mainNavHostController,
+                            collection = _collection,
+                            navigateToDetailScreenListener = { navigateToDetailScreenListener.invoke() },
+                        )
+                    },
+                )
             }
         }
         if (state.value.searchResult.isEmpty()) {
@@ -117,12 +140,33 @@ private fun onClickSearch(searchViewModel: SearchViewModel) {
     searchViewModel.searchCollection()
 }
 
+private fun loadMore(searchViewModel: SearchViewModel) {
+    searchViewModel.loadMore()
+}
+
 private fun updateQuery(query: String, searchViewModel: SearchViewModel) {
     searchViewModel.updateQuery(query)
 }
 
+private fun goToDetail(
+    collection: Collection,
+    navigateToDetailScreenListener: () -> Unit,
+    navHostController: NavHostController,
+) {
+    navHostController.currentBackStackEntry?.savedStateHandle?.apply {
+        set("collection", collection)
+    }
+    navigateToDetailScreenListener.invoke()
+}
+
 @Composable
-fun SearchResult(data: List<Collection>, loadMore: () -> Unit) {
+fun SearchResult(
+    data: List<Collection>,
+    loadMore: () -> Unit,
+    loadingState: Boolean,
+    errorState: ResultData.Error? = null,
+    onClickCollection: (Collection) -> Unit,
+) {
     val gridState = rememberLazyGridState()
 
     if (data.isNotEmpty()) {
@@ -134,28 +178,62 @@ fun SearchResult(data: List<Collection>, loadMore: () -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         state = gridState,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .recomposeHighlighter(),
         contentPadding = PaddingValues(10.dp),
     ) {
-        data.onEach { _collection ->
+        if (errorState != null) {
             item {
-                Collection(data = _collection)
+                ErrorItem(
+                    errorItemData = ErrorData(
+                        title = errorState.getMessage(),
+                    ),
+                )
+            }
+        } else {
+            data.onEach { _collection ->
+                item {
+                    Collection(
+                        data = _collection,
+                        onClickCollection = { onClickCollection.invoke(_collection) },
+                    )
+                }
+            }
+            if (loadingState) {
+                item {
+                    ProgressBarItem()
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun CollectionSearchButton(onClickSearchButton: () -> Unit, modifier: Modifier) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+
     Card(
-        onClick = { onClickSearchButton.invoke() },
+        onClick = {
+            onClickSearchButton.invoke()
+            coroutineScope.launch {
+                keyboardController?.hide()
+                focusManager.clearFocus()
+            }
+        },
         colors = CardDefaults.cardColors(containerColor = Color.Blue),
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
-        modifier = modifier.height(40.dp).padding(horizontal = 15.dp),
+        modifier = modifier
+            .height(40.dp)
+            .padding(horizontal = 15.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(top = 5.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 5.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -181,6 +259,7 @@ fun SearchBar(
     query: String,
     onDoneClickListener: (String) -> Unit,
     onDeleteClickListener: () -> Unit,
+    onNewInput: (String) -> Unit,
 ) {
     var isVisibleCancel by remember {
         mutableStateOf(false)
@@ -202,6 +281,7 @@ fun SearchBar(
         value = inputText,
         valueChangeListener = { _newText ->
             inputText = _newText
+            onNewInput.invoke(inputText)
         },
         keyboardActions = KeyboardActions(
             onDone = {
@@ -241,12 +321,19 @@ fun SearchBar(
 }
 
 @Composable
-fun Collection(data: Collection) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+fun Collection(data: Collection, onClickCollection: (Collection) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().onClick {
+            onClickCollection.invoke(data)
+        },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         AsyncImage(
             model = data.thumbImage,
             contentDescription = "",
-            modifier = Modifier.size(80.dp).padding(10.dp),
+            modifier = Modifier
+                .size(80.dp)
+                .padding(10.dp),
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -256,7 +343,12 @@ fun Collection(data: Collection) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(text = "${data.writrNm}(${data.mnfctYear})", fontSize = 13.sp)
+            Text(
+                text = "${data.writrNm}(${data.mnfctYear})",
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             Text(text = data.prdctClNm, fontSize = 13.sp)
         }
     }

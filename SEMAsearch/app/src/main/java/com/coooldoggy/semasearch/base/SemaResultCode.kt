@@ -16,7 +16,7 @@ enum class SemaResultCode(val code: String, val message: String) {
     ERROR_600(code = "ERROR-600", message = "데이터베이스 연결 오류입니다."),
     ERROR_601(code = "ERROR-601", message = "SQL 문장 오류 입니다."),
     INFO_200(code = "INFO-200", message = "해당하는 데이터가 없습니다."),
-    NONE(code = "", message = ""),
+    NONE(code = "", message = "알 수 없는 오류입니다."),
     ;
 
     companion object {

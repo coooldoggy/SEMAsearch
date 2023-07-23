@@ -42,7 +42,7 @@ fun SEMASearchApp() {
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
 
     showBottomBar = when (navBackStackEntry?.destination?.route) {
-        ScreenRoute.SearchScreen.name, ScreenRoute.SplashScreen.name -> false
+        ScreenRoute.SearchScreen.name, ScreenRoute.SplashScreen.name,  ScreenRoute.DetailScreen.name -> false
         else -> true
     }
 
@@ -50,7 +50,10 @@ fun SEMASearchApp() {
         modifier = Modifier
             .fillMaxSize(),
         bottomBar = {
-            Box(modifier = Modifier.fillMaxWidth().background(Color.White), contentAlignment = Alignment.BottomStart) {
+            Box(
+                modifier = Modifier.fillMaxWidth().background(Color.White),
+                contentAlignment = Alignment.BottomStart,
+            ) {
                 if (showBottomBar) {
                     BottomNavigationGraph(onClickSearch = {
                         navigateToSearchScreen(mainNavController = mainNavController)
@@ -69,6 +72,10 @@ private fun navigateToSearchScreen(mainNavController: NavHostController) {
     mainNavController.navigate(route = ScreenRoute.SearchScreen.name)
 }
 
+private fun navigateToDetailScreen(mainNavController: NavHostController) {
+    mainNavController.navigate(route = ScreenRoute.DetailScreen.name)
+}
+
 private fun navigateToHomeScreen(mainNavController: NavHostController) {
     mainNavController.navigate(route = ScreenRoute.HomeScreen.name) {
         popUpTo(ScreenRoute.SplashScreen.name) { inclusive = true }
@@ -85,16 +92,22 @@ fun SetUpNavHost(mainNavController: NavHostController) {
             })
         }
         composable(route = ScreenRoute.SearchScreen.name) {
-            SearchScreen(mainNavHostController = mainNavController)
+            SearchScreen(mainNavHostController = mainNavController, navigateToDetailScreenListener = { navigateToDetailScreen(mainNavController) })
         }
         composable(route = ScreenRoute.HomeScreen.name) {}
+        composable(route = ScreenRoute.DetailScreen.name) {
+            DetailScreen(mainNavHostController = mainNavController)
+        }
     }
 }
 
 @Composable
 fun BottomNavigationGraph(onClickSearch: () -> Unit) {
     val bottomNavController = rememberNavController()
-    NavHost(navController = bottomNavController, startDestination = BottomNavItem.Home.screenRoute) {
+    NavHost(
+        navController = bottomNavController,
+        startDestination = BottomNavItem.Home.screenRoute,
+    ) {
         composable(BottomNavItem.Home.screenRoute) {
             HomeScreen(onClickSearchButton = {
                 onClickSearch.invoke()
