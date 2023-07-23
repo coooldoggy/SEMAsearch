@@ -27,7 +27,7 @@ class SearchViewModel @Inject constructor(
     )
     val state = _state.asStateFlow()
     private val totalPageCount = MutableLiveData(0)
-    val _totalPageCount = totalPageCount
+    private val _totalPageCount = totalPageCount
     private val startIndex = AtomicInteger(0)
 
     fun updateQuery(query: String) {
@@ -43,6 +43,7 @@ class SearchViewModel @Inject constructor(
 
     private fun clearData() {
         _totalPageCount.value = 0
+        startIndex.getAndSet(0)
         _state.update {
             it.copy(
                 searchResult = listOf(),
@@ -83,6 +84,8 @@ class SearchViewModel @Inject constructor(
                     is ResultData.Error -> {
                         enableMoreToLoad(false)
                         setErrorState(data = result)
+                        _totalPageCount.value = 0
+                        startIndex.getAndSet(0)
                     }
                 }
             }
