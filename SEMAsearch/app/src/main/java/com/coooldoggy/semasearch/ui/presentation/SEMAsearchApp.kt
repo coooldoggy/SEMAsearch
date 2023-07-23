@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.booleanResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -69,6 +70,7 @@ fun SEMASearchApp(favoriteViewModel: FavoriteViewModel) {
         Box(modifier = Modifier.padding(_innerPadding)) {
             SetUpNavHost(
                 mainNavController = mainNavController,
+                bottomNavController = bottomNavController,
                 favoriteViewModel = favoriteViewModel,
             )
         }
@@ -91,7 +93,7 @@ private fun navigateToHomeScreen(mainNavController: NavHostController) {
 }
 
 @Composable
-fun SetUpNavHost(mainNavController: NavHostController, favoriteViewModel: FavoriteViewModel) {
+fun SetUpNavHost(mainNavController: NavHostController, bottomNavController: NavHostController, favoriteViewModel: FavoriteViewModel) {
     NavHost(navController = mainNavController, startDestination = ScreenRoute.SplashScreen.name) {
         composable(route = ScreenRoute.SplashScreen.name) {
             SplashScreen(onDoneSplash = {
@@ -109,9 +111,31 @@ fun SetUpNavHost(mainNavController: NavHostController, favoriteViewModel: Favori
             DetailScreen(
                 mainNavHostController = mainNavController,
                 favoriteViewModel = favoriteViewModel,
+                onDonePatch = {
+                    goToFavoriteBottomBar(mainNavController = mainNavController, bottomNavController = bottomNavController)
+                },
             )
         }
         composable(route = ScreenRoute.FavoriteScreen.name) {}
+    }
+}
+
+private fun goToFavoriteBottomBar(mainNavController: NavHostController, bottomNavController: NavHostController) {
+    val navBackStack = mainNavController.previousBackStackEntry?.destination?.route
+    if (navBackStack == "SearchScreen") {
+        mainNavController.navigate(route = ScreenRoute.HomeScreen.name) {
+            popUpTo(ScreenRoute.SearchScreen.name) { inclusive = true }
+            launchSingleTop = true
+        }
+        bottomNavController.navigate(BottomNavItem.Favorite.screenRoute) {
+            bottomNavController.graph.startDestinationRoute?.let {
+                popUpTo(it) { saveState = true }
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    } else {
+        mainNavController.navigateUp()
     }
 }
 
