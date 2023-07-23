@@ -8,6 +8,7 @@ import com.coooldoggy.semasearch.ui.common.BaseViewModel
 import com.coooldoggy.semasearch.ui.presentation.contract.SearchScreenContract
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,13 +25,13 @@ class SearchViewModel @Inject constructor(
             searchResult = listOf(),
         ),
     )
-    val state = _state
+    val state = _state.asStateFlow()
     private val totalPageCount = MutableLiveData(0)
     val _totalPageCount = totalPageCount
     private val startIndex = AtomicInteger(0)
 
     fun updateQuery(query: String) {
-        state.update {
+        _state.update {
             it.copy(
                 searchQuery = query,
             )
@@ -42,7 +43,7 @@ class SearchViewModel @Inject constructor(
 
     private fun clearData() {
         _totalPageCount.value = 0
-        state.update {
+        _state.update {
             it.copy(
                 searchResult = listOf(),
             )
@@ -63,7 +64,7 @@ class SearchViewModel @Inject constructor(
                     is ResultData.Success -> {
                         if (state.value.searchResult.isEmpty()) {
                             _totalPageCount.value = result.data?.SemaPsgudInfoKorInfo?.totalCount ?: 0
-                            state.update {
+                            _state.update {
                                 it.copy(
                                     searchResult = result.data?.SemaPsgudInfoKorInfo?.collectionList ?: emptyList(),
                                 )

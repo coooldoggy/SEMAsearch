@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -115,6 +116,20 @@ fun BoxScope.AppBarWithText(@IdRes textId: Int) {
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             modifier = Modifier.padding(start = 20.dp).align(Alignment.TopStart),
+        )
+    })
+}
+
+@SuppressLint("ResourceType")
+@Composable
+fun ColumnScope.AppBarWithText(@IdRes textId: Int) {
+    AppBar(leftContent = {
+        Text(
+            text = stringResource(id = textId),
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(start = 20.dp),
         )
     })
 }

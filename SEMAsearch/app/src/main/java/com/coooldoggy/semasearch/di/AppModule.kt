@@ -1,11 +1,16 @@
 package com.coooldoggy.semasearch.di
 
+import android.content.Context
+import androidx.room.Room
 import com.coooldoggy.semasearch.BuildConfig
 import com.coooldoggy.semasearch.SEMA_URL
+import com.coooldoggy.semasearch.data.database.FavoriteCollectionDao
+import com.coooldoggy.semasearch.data.database.FavoriteCollectionDataBase
 import com.coooldoggy.semasearch.data.network.SEMAService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -44,5 +49,19 @@ object AppModule {
         OkHttpClient
             .Builder()
             .build()
+    }
+
+    @Singleton
+    @Provides
+    fun provideFavoriteDao(favoriteCollectionDataBase: FavoriteCollectionDataBase): FavoriteCollectionDao = favoriteCollectionDataBase.favoriteCollectionDao()
+
+    @Singleton
+    @Provides
+    fun provideAppDatabase(@ApplicationContext context: Context): FavoriteCollectionDataBase {
+        return Room.databaseBuilder(
+            context = context,
+            klass = FavoriteCollectionDataBase::class.java,
+            name = "favorite_collection_db",
+        ).fallbackToDestructiveMigration().build()
     }
 }

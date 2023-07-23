@@ -33,16 +33,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.coooldoggy.semasearch.ui.common.BottomNavItem
 import com.coooldoggy.semasearch.ui.common.ScreenRoute
+import com.coooldoggy.semasearch.ui.presentation.viewmodel.FavoriteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SEMASearchApp() {
+fun SEMASearchApp(favoriteViewModel: FavoriteViewModel) {
     val mainNavController = rememberNavController()
     var showBottomBar by rememberSaveable { mutableStateOf(true) }
     val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
 
     showBottomBar = when (navBackStackEntry?.destination?.route) {
-        ScreenRoute.SearchScreen.name, ScreenRoute.SplashScreen.name,  ScreenRoute.DetailScreen.name -> false
+        ScreenRoute.SearchScreen.name, ScreenRoute.SplashScreen.name, ScreenRoute.DetailScreen.name -> false
         else -> true
     }
 
@@ -51,19 +52,24 @@ fun SEMASearchApp() {
             .fillMaxSize(),
         bottomBar = {
             Box(
-                modifier = Modifier.fillMaxWidth().background(Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White),
                 contentAlignment = Alignment.BottomStart,
             ) {
                 if (showBottomBar) {
-                    BottomNavigationGraph(onClickSearch = {
+                    BottomNavigationGraph(mainNavController = mainNavController, onClickSearch = {
                         navigateToSearchScreen(mainNavController = mainNavController)
-                    })
+                    }, favoriteViewModel = favoriteViewModel)
                 }
             }
         },
     ) { _innerPadding ->
         Box(modifier = Modifier.padding(_innerPadding)) {
-            SetUpNavHost(mainNavController = mainNavController)
+            SetUpNavHost(
+                mainNavController = mainNavController,
+                favoriteViewModel = favoriteViewModel,
+            )
         }
     }
 }
@@ -84,7 +90,7 @@ private fun navigateToHomeScreen(mainNavController: NavHostController) {
 }
 
 @Composable
-fun SetUpNavHost(mainNavController: NavHostController) {
+fun SetUpNavHost(mainNavController: NavHostController, favoriteViewModel: FavoriteViewModel) {
     NavHost(navController = mainNavController, startDestination = ScreenRoute.SplashScreen.name) {
         composable(route = ScreenRoute.SplashScreen.name) {
             SplashScreen(onDoneSplash = {
@@ -92,17 +98,28 @@ fun SetUpNavHost(mainNavController: NavHostController) {
             })
         }
         composable(route = ScreenRoute.SearchScreen.name) {
-            SearchScreen(mainNavHostController = mainNavController, navigateToDetailScreenListener = { navigateToDetailScreen(mainNavController) })
+            SearchScreen(
+                mainNavHostController = mainNavController,
+                navigateToDetailScreenListener = { navigateToDetailScreen(mainNavController) },
+            )
         }
         composable(route = ScreenRoute.HomeScreen.name) {}
         composable(route = ScreenRoute.DetailScreen.name) {
-            DetailScreen(mainNavHostController = mainNavController)
+            DetailScreen(
+                mainNavHostController = mainNavController,
+                favoriteViewModel = favoriteViewModel,
+            )
         }
+        composable(route = ScreenRoute.FavoriteScreen.name) {}
     }
 }
 
 @Composable
-fun BottomNavigationGraph(onClickSearch: () -> Unit) {
+fun BottomNavigationGraph(
+    onClickSearch: () -> Unit,
+    mainNavController: NavHostController,
+    favoriteViewModel: FavoriteViewModel,
+) {
     val bottomNavController = rememberNavController()
     NavHost(
         navController = bottomNavController,
@@ -114,7 +131,11 @@ fun BottomNavigationGraph(onClickSearch: () -> Unit) {
             })
         }
         composable(BottomNavItem.Favorite.screenRoute) {
-            FavoriteScreen()
+            FavoriteScreen(
+                mainNavHostController = mainNavController,
+                navigateToDetailScreenListener = { navigateToDetailScreen(mainNavController) },
+                favoriteViewModel = favoriteViewModel,
+            )
         }
     }
     BottomNavigationBar(navController = bottomNavController)

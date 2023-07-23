@@ -148,7 +148,7 @@ private fun updateQuery(query: String, searchViewModel: SearchViewModel) {
     searchViewModel.updateQuery(query)
 }
 
-private fun goToDetail(
+fun goToDetail(
     collection: Collection,
     navigateToDetailScreenListener: () -> Unit,
     navHostController: NavHostController,
